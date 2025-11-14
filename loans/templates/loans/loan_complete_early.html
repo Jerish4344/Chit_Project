@@ -1,0 +1,190 @@
+{% extends 'loans/base.html' %}
+
+{% block title %}Complete Loan Early - Loan Management System{% endblock %}
+
+{% block page_heading %}Complete Loan Early{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'loan_detail' pk=loan.pk %}" class="btn btn-sm btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Loan
+    </a>
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Complete Loan #{{ loan.loan_number }} Early</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> This will modify the loan repayment schedule or mark it as completed early.
+                    </div>
+                    
+                    <h5>Loan Information</h5>
+                    <table class="table table-bordered mt-3">
+                        <tbody>
+                            <tr>
+                                <th width="30%">Loan Number</th>
+                                <td>{{ loan.loan_number }}</td>
+                            </tr>
+                            <tr>
+                                <th>Customer</th>
+                                <td>{{ loan.customer.full_name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Principal Amount</th>
+                                <td>₹{{ loan.principal_amount|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <th>Installment Amount</th>
+                                <td>₹{{ loan.installment_amount|floatformat:2 }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <h5 class="mt-4">Payment Summary</h5>
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th width="30%">Total Expected Amount (20 installments)</th>
+                                <td>₹{{ total_expected|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <th>Total Paid Amount</th>
+                                <td>₹{{ total_paid|floatformat:2 }}</td>
+                            </tr>
+                            <tr class="table-info">
+                                <th>Remaining Amount</th>
+                                <td>₹{{ remaining_amount|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <th>Paid Installments</th>
+                                <td>{{ paid_installments }} of {{ loan.total_installments }}</td>
+                            </tr>
+                            <tr>
+                                <th>Pending Installments</th>
+                                <td>{{ pending_installments }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="completion_option" class="form-label">Choose an Option:</label>
+                            <select id="completion_option" name="completion_option" class="form-select" onchange="toggleCompletionFields()">
+                                <option value="standard_early">Standard Early Completion (Pay Remaining Balance)</option>
+                                <option value="ten_installments">Convert to 10-Installment Plan</option>
+                                <option value="custom_payment">Record Custom Final Payment and Close</option>
+                            </select>
+                        </div>
+                        
+                        <div id="ten_installment_info" class="alert alert-warning mt-3" style="display: none;">
+                            <h6><i class="fas fa-info-circle me-1"></i> 10-Installment Plan Details:</h6>
+                            <p>This option will adjust the loan to complete in 10 installments total.</p>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>Original Total (20 installments):</th>
+                                    <td>₹{{ total_expected|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <th>10-Installment Total:</th>
+                                    <td>₹{{ ten_installment_total|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Discount Amount:</th>
+                                    <td>₹{{ discount_amount|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Already Paid:</th>
+                                    <td>₹{{ total_paid|floatformat:2 }}</td>
+                                </tr>
+                                <tr class="table-success">
+                                    <th>Remaining (After Discount):</th>
+                                    <td>₹{{ ten_installment_remaining|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <th>New Installment Amount:</th>
+                                    <td>₹{{ new_installment_amount|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Remaining Installments:</th>
+                                    <td>{{ remaining_ten_installments }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <div id="payment_fields" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="final_payment_amount" class="form-label">Final Payment Amount:</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" step="0.01" min="0" id="final_payment_amount" name="final_payment_amount" class="form-control" value="{{ remaining_amount|floatformat:2 }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="payment_method" class="form-label">Payment Method:</label>
+                                    <select id="payment_method" name="payment_method" class="form-select">
+                                        <option value="CASH">Cash</option>
+                                        <option value="UPI">UPI</option>
+                                        <option value="BANK_TRANSFER">Bank Transfer</option>
+                                        <option value="CHEQUE">Cheque</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="transaction_id" class="form-label">Transaction ID (optional):</label>
+                                <input type="text" id="transaction_id" name="transaction_id" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes / Reason:</label>
+                            <textarea id="notes" name="notes" class="form-control" rows="3" required></textarea>
+                            <div class="form-text">Please provide a reason for changing the loan repayment plan.</div>
+                        </div>
+                        
+                        <div class="mt-4 text-center">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check-circle me-1"></i> Confirm Changes
+                            </button>
+                            <a href="{% url 'loan_detail' pk=loan.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript for toggling fields -->
+    <script>
+        function toggleCompletionFields() {
+            var completionOption = document.getElementById('completion_option').value;
+            var paymentFields = document.getElementById('payment_fields');
+            var tenInstallmentInfo = document.getElementById('ten_installment_info');
+            
+            // Hide all sections first
+            paymentFields.style.display = 'none';
+            tenInstallmentInfo.style.display = 'none';
+            
+            // Show relevant sections based on selection
+            if (completionOption === 'custom_payment') {
+                paymentFields.style.display = 'block';
+            } else if (completionOption === 'ten_installments') {
+                tenInstallmentInfo.style.display = 'block';
+            }
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleCompletionFields();
+        });
+    </script>
+{% endblock %}

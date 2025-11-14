@@ -1,0 +1,141 @@
+{% extends 'loans/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Approve Loan - Loan Management System{% endblock %}
+
+{% block page_heading %}Approve or Reject Loan{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'loan_detail' pk=loan.pk %}" class="btn btn-sm btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Loan
+    </a>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Loan Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Loan Information</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Loan Number</div>
+                                <div class="col-7">#{{ loan.loan_number }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Customer</div>
+                                <div class="col-7">
+                                    <a href="{% url 'customer_detail' pk=loan.customer.pk %}">
+                                        {{ loan.customer.full_name }}
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Amount</div>
+                                <div class="col-7">₹{{ loan.principal_amount|floatformat:2 }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Installment</div>
+                                <div class="col-7">₹{{ loan.installment_amount|floatformat:2 }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Total Installments</div>
+                                <div class="col-7">{{ loan.total_installments }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Applied On</div>
+                                <div class="col-7">{{ loan.application_date|date:"d M Y, h:i A" }}</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Customer Information -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Customer Information</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Name</div>
+                                <div class="col-7">{{ loan.customer.full_name }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Phone</div>
+                                <div class="col-7">{{ loan.customer.phone_number }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Email</div>
+                                <div class="col-7">{{ loan.customer.email }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Occupation</div>
+                                <div class="col-7">{{ loan.customer.occupation }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Income</div>
+                                <div class="col-7">₹{{ loan.customer.income|floatformat:2 }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">ID Proof</div>
+                                <div class="col-7">{{ loan.customer.id_proof_type }}: {{ loan.customer.id_proof_number }}</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <!-- Approval Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Approval Decision</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {{ form|crispy }}
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check-circle me-1"></i> Submit Decision
+                            </button>
+                            <a href="{% url 'loan_detail' pk=loan.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

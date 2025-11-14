@@ -1,0 +1,250 @@
+{% extends 'loans/base.html' %}
+
+{% block title %}{{ customer.full_name }} - Customer Details{% endblock %}
+
+{% block page_heading %}Customer Details{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-group">
+        <a href="{% url 'customer_update' pk=customer.pk %}" class="btn btn-sm btn-primary">
+            <i class="fas fa-edit me-1"></i> Edit Customer
+        </a>
+        <a href="{% url 'loan_create' customer_pk=customer.pk %}" class="btn btn-sm btn-success">
+            <i class="fas fa-plus me-1"></i> New Loan
+        </a>
+        {% if user.profile.is_admin %}
+        <a href="{% url 'customer_delete' pk=customer.pk %}" class="btn btn-sm btn-danger">
+            <i class="fas fa-trash me-1"></i> Delete Customer
+        </a>
+        {% endif %}
+        <a href="{% url 'customer_list' %}" class="btn btn-sm btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to List
+        </a>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <!-- Customer Information -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Personal Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        {% if customer.photo %}
+                            <img src="{{ customer.photo.url }}" alt="{{ customer.full_name }}" class="img-fluid rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
+                        {% else %}
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto" style="width: 120px; height: 120px;">
+                                <i class="fas fa-user fa-4x text-white"></i>
+                            </div>
+                        {% endif %}
+                        <h4 class="mt-3">{{ customer.full_name }}</h4>
+                        <p class="text-muted mb-0">{{ customer.occupation }}</p>
+                    </div>
+                    
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Gender</div>
+                                <div class="col-7">{{ customer.get_gender_display }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Phone</div>
+                                <div class="col-7">{{ customer.phone_number }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Email</div>
+                                <div class="col-7">{{ customer.email }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Date of Birth</div>
+                                <div class="col-7">{{ customer.date_of_birth|date:"d M Y" }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Address</div>
+                                <div class="col-7">{{ customer.address }}, {{ customer.city }}, {{ customer.state }} - {{ customer.pincode }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">ID Proof</div>
+                                <div class="col-7">{{ customer.id_proof_type }}: {{ customer.id_proof_number }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Income</div>
+                                <div class="col-7">₹{{ customer.income|floatformat:2 }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Customer Since</div>
+                                <div class="col-7">{{ customer.created_at|date:"d M Y" }}</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <div class="row">
+                        {% if customer.id_proof_document %}
+                            <div class="col-6">
+                                <a href="{{ customer.id_proof_document.url }}" class="btn btn-sm btn-outline-primary w-100" target="_blank">
+                                    <i class="fas fa-id-card me-1"></i> View ID Proof
+                                </a>
+                            </div>
+                        {% endif %}
+                        {% if customer.address_proof_document %}
+                            <div class="col-6">
+                                <a href="{{ customer.address_proof_document.url }}" class="btn btn-sm btn-outline-primary w-100" target="_blank">
+                                    <i class="fas fa-home me-1"></i> View Address Proof
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if customer.custom_interest_rate %}
+                    <li class="list-group-item">
+                        <div class="row">
+                            <div class="col-5 text-muted">Interest Rate</div>
+                            <div class="col-7">
+                                <span class="badge {% if customer.custom_interest_rate < 500 %}bg-success{% elif customer.custom_interest_rate > 500 %}bg-warning text-dark{% else %}bg-info{% endif %}">
+                                    ₹{{ customer.custom_interest_rate }} per lakh
+                                </span>
+                                {% if customer.custom_interest_rate < 500 %}
+                                    <small class="text-muted">(Discounted rate)</small>
+                                {% elif customer.custom_interest_rate > 500 %}
+                                    <small class="text-muted">(Premium rate)</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Loans List -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Loans</h5>
+                    <a href="{% url 'loan_create' customer_pk=customer.pk %}" class="btn btn-sm btn-success">
+                        <i class="fas fa-plus me-1"></i> New Loan
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Loan Number</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Installment</th>
+                                    <th>Remaining</th>
+                                    <th>Application Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for loan in loans %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'loan_detail' pk=loan.pk %}">
+                                                #{{ loan.loan_number }}
+                                            </a>
+                                        </td>
+                                        <td>₹{{ loan.principal_amount|floatformat:2 }}</td>
+                                        <td>
+                                            <span class="badge badge-status 
+                                                {% if loan.status == 'PENDING' %}badge-pending
+                                                {% elif loan.status == 'APPROVED' %}badge-approved
+                                                {% elif loan.status == 'REJECTED' %}badge-rejected
+                                                {% elif loan.status == 'DISBURSED' %}badge-disbursed
+                                                {% elif loan.status == 'COMPLETED' %}badge-completed
+                                                {% elif loan.status == 'DEFAULTED' %}badge-defaulted{% endif %}">
+                                                {{ loan.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>₹{{ loan.installment_amount|floatformat:2 }}</td>
+                                        <td>{{ loan.remaining_installments }}/{{ loan.total_installments }}</td>
+                                        <td>{{ loan.application_date|date:"d M Y" }}</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{% url 'loan_detail' pk=loan.pk %}" class="btn btn-sm btn-info">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% if loan.status == 'PENDING' %}
+                                                    <a href="{% url 'loan_approve' pk=loan.pk %}" class="btn btn-sm btn-success">
+                                                        <i class="fas fa-check"></i>
+                                                    </a>
+                                                {% elif loan.status == 'APPROVED' %}
+                                                    <a href="{% url 'loan_disburse' pk=loan.pk %}" class="btn btn-sm btn-primary">
+                                                        <i class="fas fa-money-bill-wave"></i>
+                                                    </a>
+                                                {% elif loan.status == 'DISBURSED' %}
+                                                    <a href="{% url 'payment_create' loan_pk=loan.pk %}" class="btn btn-sm btn-success">
+                                                        <i class="fas fa-receipt"></i>
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center">No loans found for this customer</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Loan Summary -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Loan Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <h6 class="text-muted mb-1">Total Loans</h6>
+                                <h3 class="mb-0">{{ loans|length }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <h6 class="text-muted mb-1">Active Loans</h6>
+                                <h3 class="mb-0">{{ active_loans_count }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <h6 class="text-muted mb-1">Completed Loans</h6>
+                                <h3 class="mb-0">{{ completed_loans_count }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <h6 class="text-muted mb-1">Total Amount</h6>
+                                <h3 class="mb-0">₹{{ total_loan_amount|floatformat:2 }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,283 @@
+{% extends 'loans/base.html' %}
+
+{% block title %}Loan #{{ loan.loan_number }} - Details{% endblock %}
+
+{% block page_heading %}Loan Details{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-group">
+        {% if loan.status == 'PENDING' %}
+            <a href="{% url 'loan_approve' pk=loan.pk %}" class="btn btn-sm btn-success">
+                <i class="fas fa-check me-1"></i> Approve/Reject
+            </a>
+        {% elif loan.status == 'APPROVED' and advance_payments_completed %}
+            <a href="{% url 'loan_disburse' pk=loan.pk %}" class="btn btn-sm btn-primary">
+                <i class="fas fa-money-bill-wave me-1"></i> Disburse Loan
+            </a>
+        {% elif loan.status == 'DISBURSED' %}
+            <a href="{% url 'payment_create' loan_pk=loan.pk %}" class="btn btn-sm btn-success">
+                <i class="fas fa-receipt me-1"></i> Record Payment
+            </a>
+            <a href="{% url 'approve_late_payment' loan_pk=loan.pk %}" class="btn btn-sm btn-warning">
+                <i class="fas fa-clock me-1"></i> Approve Late Payment
+            </a>
+            <a href="{% url 'complete_loan_early' pk=loan.pk %}" class="btn btn-sm btn-info">
+                <i class="fas fa-check-double me-1"></i> Complete Early
+            </a>
+        {% elif loan.status == 'REJECTED' and not loan.is_advance_refunded %}
+            <a href="{% url 'refund_advance' pk=loan.pk %}" class="btn btn-sm btn-warning">
+                <i class="fas fa-money-bill-wave me-1"></i> Refund Advance
+            </a>
+        {% endif %}
+        
+        {% if loan.status != 'DISBURSED' and user.profile.is_admin %}
+            <a href="{% url 'loan_delete' pk=loan.pk %}" class="btn btn-sm btn-danger">
+                <i class="fas fa-trash me-1"></i> Delete Loan
+            </a>
+        {% endif %}
+        
+        <a href="{% url 'loan_list' %}" class="btn btn-sm btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to List
+        </a>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <!-- Loan Information -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Loan Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h2>Loan #{{ loan.loan_number }}</h2>
+                        <span class="badge badge-status 
+                            {% if loan.status == 'PENDING' %}badge-pending
+                            {% elif loan.status == 'APPROVED' %}badge-approved
+                            {% elif loan.status == 'REJECTED' %}badge-rejected
+                            {% elif loan.status == 'DISBURSED' %}badge-disbursed
+                            {% elif loan.status == 'COMPLETED' %}badge-completed
+                            {% elif loan.status == 'DEFAULTED' %}badge-defaulted{% endif %}">
+                            {{ loan.get_status_display }}
+                        </span>
+                    </div>
+                    
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Customer</div>
+                                <div class="col-7">
+                                    <a href="{% url 'customer_detail' pk=loan.customer.pk %}">
+                                        {{ loan.customer.full_name }}
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Principal Amount</div>
+                                <div class="col-7">₹{{ loan.principal_amount|floatformat:2 }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Interest Rate</div>
+                                <div class="col-7">₹{{ loan.interest_rate }} per lakh</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Installment Amount</div>
+                                <div class="col-7">₹{{ loan.installment_amount|floatformat:2 }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Total Installments</div>
+                                <div class="col-7">{{ loan.total_installments }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Advance Installments</div>
+                                <div class="col-7">{{ loan.advance_installments }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Remaining</div>
+                                <div class="col-7">{{ loan.remaining_installments }}</div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Applied On</div>
+                                <div class="col-7">{{ loan.application_date|date:"d M Y, h:i A" }}</div>
+                            </div>
+                        </li>
+                        {% if loan.approval_date %}
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Approved On</div>
+                                <div class="col-7">{{ loan.approval_date|date:"d M Y, h:i A" }}</div>
+                            </div>
+                        </li>
+                        {% endif %}
+                        {% if loan.disbursement_date %}
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Disbursed On</div>
+                                <div class="col-7">{{ loan.disbursement_date|date:"d M Y, h:i A" }}</div>
+                            </div>
+                        </li>
+                        {% endif %}
+                        {% if loan.first_payment_date %}
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">First Payment Due</div>
+                                <div class="col-7">{{ loan.first_payment_date|date:"d M Y" }}</div>
+                            </div>
+                        </li>
+                        {% endif %}
+                        {% if loan.completion_date %}
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Completed On</div>
+                                <div class="col-7">{{ loan.completion_date|date:"d M Y, h:i A" }}</div>
+                            </div>
+                        </li>
+                        {% endif %}
+                        {% if loan.is_advance_refunded %}
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-5 text-muted">Advance Refunded</div>
+                                <div class="col-7"><span class="badge bg-success">Yes</span></div>
+                            </div>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% if loan.notes %}
+                <div class="card-footer">
+                    <h6 class="mb-2">Notes:</h6>
+                    <p class="mb-0">{{ loan.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Payment Information -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Payment Schedule</h5>
+                    {% if loan.status == 'DISBURSED' or loan.status == 'APPROVED' or loan.status == 'PENDING' %}
+                        <a href="{% url 'payment_create' loan_pk=loan.pk %}" class="btn btn-sm btn-success">
+                            <i class="fas fa-receipt me-1"></i> Record Payment
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Due Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Payment Date</th>
+                                    <th>Method</th>
+                                    <th>Transaction ID</th>
+                                    <th>Received By</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                    <tr{% if payment.status == 'PENDING' and payment.is_late %} class="table-danger"{% endif %}>
+                                        <td>{{ payment.payment_number }}</td>
+                                        <td>{{ payment.due_date|date:"d M Y" }}</td>
+                                        <td>₹{{ payment.amount|floatformat:2 }}</td>
+                                        <td>
+                                            <span class="badge {% if payment.status == 'COMPLETED' %}bg-success{% elif payment.status == 'PENDING' %}bg-warning text-dark{% elif payment.status == 'FAILED' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                                {{ payment.get_status_display }}
+                                            </span>
+                                            {% if payment.is_advance_payment %}
+                                                <span class="badge bg-info">Advance</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{% if payment.status == 'COMPLETED' %}{{ payment.payment_date|date:"d M Y" }}{% else %}-{% endif %}</td>
+                                        <td>{% if payment.payment_method %}{{ payment.get_payment_method_display }}{% else %}-{% endif %}</td>
+                                        <td>{% if payment.transaction_id %}{{ payment.transaction_id }}{% else %}-{% endif %}</td>
+                                        <td>
+                                            {% if payment.received_by %}
+                                                <span data-bs-toggle="tooltip" title="Received on {{ payment.payment_date|date:'d M Y, h:i A' }}">
+                                                    {{ payment.received_by }}
+                                                </span>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if payment.status == 'PENDING' %}
+                                                <a href="{% url 'payment_update' pk=payment.pk %}" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            {% endif %}
+                                            {% if payment.payment_proof %}
+                                                <a href="{{ payment.payment_proof.url }}" class="btn btn-sm btn-info" target="_blank">
+                                                    <i class="fas fa-file-alt"></i>
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="9" class="text-center">No payment records found</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Loan Activities -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Loan Activities</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for activity in activities %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">{{ activity.get_activity_type_display }}</h6>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="text-muted">{{ activity.performed_at|date:"d M Y, h:i A" }}</small>
+                                        {% if activity.performed_by %}
+                                            <p class="text-muted mb-0 small">by {{ activity.performed_by}}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if activity.notes %}
+                                    <p class="mb-0 mt-1">{{ activity.notes }}</p>
+                                {% endif %}
+                            </div>
+                        {% empty %}
+                            <div class="list-group-item">
+                                <p class="mb-0 text-center text-muted">No activities recorded</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'loans/base.html' %}
+
+{% block title %}Delete Customer - Loan Management System{% endblock %}
+
+{% block page_heading %}Delete Customer{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'customer_detail' pk=customer.pk %}" class="btn btn-sm btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Customer
+    </a>
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Confirm Customer Deletion</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> You are about to delete this customer. This action cannot be undone.
+                    </div>
+                    
+                    <h5>Customer Information</h5>
+                    <table class="table table-bordered mt-3">
+                        <tbody>
+                            <tr>
+                                <th width="30%">Name</th>
+                                <td>{{ customer.full_name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Phone</th>
+                                <td>{{ customer.phone_number }}</td>
+                            </tr>
+                            <tr>
+                                <th>Email</th>
+                                <td>{{ customer.email }}</td>
+                            </tr>
+                            <tr>
+                                <th>Customer Since</th>
+                                <td>{{ customer.created_at|date:"d M Y" }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <h5 class="mt-4">Loan History</h5>
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th width="30%">Total Loans</th>
+                                <td>{{ customer.loans.all|length }}</td>
+                            </tr>
+                            <tr>
+                                <th>Completed Loans</th>
+                                <td>{{ completed_loans_count }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        
+                        <div class="mt-4 text-center">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-1"></i> Confirm Delete
+                            </button>
+                            <a href="{% url 'customer_detail' pk=customer.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

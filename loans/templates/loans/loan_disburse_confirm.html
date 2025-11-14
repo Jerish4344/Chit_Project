@@ -1,0 +1,86 @@
+{% extends 'loans/base.html' %}
+
+{% block title %}Disburse Loan - Loan Management System{% endblock %}
+
+{% block page_heading %}Disburse Loan{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'loan_detail' pk=loan.pk %}" class="btn btn-sm btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Loan
+    </a>
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Confirm Loan Disbursement</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> This action will mark the loan as disbursed and start the repayment schedule.
+                    </div>
+                    
+                    <h5>Loan Details</h5>
+                    <table class="table table-bordered mt-3">
+                        <tbody>
+                            <tr>
+                                <th width="30%">Loan Number</th>
+                                <td>{{ loan.loan_number }}</td>
+                            </tr>
+                            <tr>
+                                <th>Customer</th>
+                                <td>{{ loan.customer.full_name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Principal Amount</th>
+                                <td>₹{{ loan.principal_amount|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <th>Installment Amount</th>
+                                <td>₹{{ loan.installment_amount|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <th>Advance Installments</th>
+                                <td>{{ loan.advance_installments }} (Completed)</td>
+                            </tr>
+                            <tr>
+                                <th>Remaining Installments</th>
+                                <td>{{ loan.remaining_installments }}</td>
+                            </tr>
+                            <tr>
+                                <th>Approved On</th>
+                                <td>{{ loan.approval_date|date:"d M Y, h:i A" }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Confirmation:</strong> By proceeding, you confirm that:
+                            <ul class="mb-0 mt-2">
+                                <li>All required documentation has been verified</li>
+                                <li>All advance installments have been paid</li>
+                                <li>The customer has been informed about the repayment schedule</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="mt-4 text-center">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-money-bill-wave me-1"></i> Disburse Loan
+                            </button>
+                            <a href="{% url 'loan_detail' pk=loan.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

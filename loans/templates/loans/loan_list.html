@@ -1,0 +1,183 @@
+{% extends 'loans/base.html' %}
+
+{% block title %}Loans - Loan Management System{% endblock %}
+
+{% block page_heading %}Loans{% endblock %}
+
+{% block content %}
+    <!-- Search and Filtering -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="Search loan #, customer..." value="{{ search_query|default:'' }}">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i> Search
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select name="status" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Statuses</option>
+                        <option value="PENDING" {% if status == 'PENDING' %}selected{% endif %}>Pending</option>
+                        <option value="APPROVED" {% if status == 'APPROVED' %}selected{% endif %}>Approved</option>
+                        <option value="REJECTED" {% if status == 'REJECTED' %}selected{% endif %}>Rejected</option>
+                        <option value="DISBURSED" {% if status == 'DISBURSED' %}selected{% endif %}>Disbursed</option>
+                        <option value="COMPLETED" {% if status == 'COMPLETED' %}selected{% endif %}>Completed</option>
+                        <option value="DEFAULTED" {% if status == 'DEFAULTED' %}selected{% endif %}>Defaulted</option>
+                    </select>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    {% if search_query or status %}
+                        <a href="{% url 'loan_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i> Clear Filters
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loan List -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Loan Number</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Installment</th>
+                            <th>Remaining</th>
+                            <th>Application Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for loan in page_obj %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'loan_detail' pk=loan.pk %}">
+                                        #{{ loan.loan_number }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{% url 'customer_detail' pk=loan.customer.pk %}">
+                                        {{ loan.customer.full_name }}
+                                    </a>
+                                </td>
+                                <td>₹{{ loan.principal_amount|floatformat:2 }}</td>
+                                <td>
+                                    <span class="badge badge-status 
+                                        {% if loan.status == 'PENDING' %}badge-pending
+                                        {% elif loan.status == 'APPROVED' %}badge-approved
+                                        {% elif loan.status == 'REJECTED' %}badge-rejected
+                                        {% elif loan.status == 'DISBURSED' %}badge-disbursed
+                                        {% elif loan.status == 'COMPLETED' %}badge-completed
+                                        {% elif loan.status == 'DEFAULTED' %}badge-defaulted{% endif %}">
+                                        {{ loan.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>₹{{ loan.installment_amount|floatformat:2 }}</td>
+                                <td>{{ loan.remaining_installments }}/{{ loan.total_installments }}</td>
+                                <td>{{ loan.application_date|date:"d M Y" }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'loan_detail' pk=loan.pk %}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if loan.status == 'PENDING' %}
+                                            <a href="{% url 'loan_approve' pk=loan.pk %}" class="btn btn-sm btn-success">
+                                                <i class="fas fa-check"></i>
+                                            </a>
+                                        {% elif loan.status == 'APPROVED' %}
+                                            <a href="{% url 'loan_disburse' pk=loan.pk %}" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-money-bill-wave"></i>
+                                            </a>
+                                        {% elif loan.status == 'DISBURSED' %}
+                                            <a href="{% url 'payment_create' loan_pk=loan.pk %}" class="btn btn-sm btn-success">
+                                                <i class="fas fa-receipt"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center">No loans found</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status %}&status={{ status }}{% endif %}" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status %}&status={{ status }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status %}&status={{ status }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status %}&status={{ status }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status %}&status={{ status }}{% endif %}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+{% endblock %}

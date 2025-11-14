@@ -1,0 +1,98 @@
+{% extends 'loans/base.html' %}
+
+{% block title %}Refund Advance Payment - Loan Management System{% endblock %}
+
+{% block page_heading %}Refund Advance Payment{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'loan_detail' pk=loan.pk %}" class="btn btn-sm btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Loan
+    </a>
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Confirm Advance Payment Refund</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This action will process a refund of advance payments for the rejected loan.
+                    </div>
+                    
+                    <h5>Loan Details</h5>
+                    <table class="table table-bordered mt-3">
+                        <tbody>
+                            <tr>
+                                <th width="30%">Loan Number</th>
+                                <td>{{ loan.loan_number }}</td>
+                            </tr>
+                            <tr>
+                                <th>Customer</th>
+                                <td>{{ loan.customer.full_name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Status</th>
+                                <td>{{ loan.get_status_display }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <h5 class="mt-4">Advance Payments</h5>
+                    {% if advance_payments %}
+                        <table class="table table-bordered mt-3">
+                            <thead>
+                                <tr>
+                                    <th>Payment #</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                    <th>Method</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in advance_payments %}
+                                    <tr>
+                                        <td>{{ payment.payment_number }}</td>
+                                        <td>₹{{ payment.amount|floatformat:2 }}</td>
+                                        <td>{{ payment.payment_date|date:"d M Y" }}</td>
+                                        <td>{{ payment.get_payment_method_display }}</td>
+                                    </tr>
+                                {% endfor %}
+                                <tr class="table-warning">
+                                    <th colspan="1">Total Refund Amount</th>
+                                    <th colspan="3">₹{{ refund_amount|floatformat:2 }}</th>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <form method="post" class="mt-4">
+                            {% csrf_token %}
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Note:</strong> This will create a negative payment record to represent the refund and update the financial statistics.
+                            </div>
+                            
+                            <div class="mt-4 text-center">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-money-bill-wave me-1"></i> Process Refund
+                                </button>
+                                <a href="{% url 'loan_detail' pk=loan.pk %}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-1"></i> Cancel
+                                </a>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No advance payments were found for this loan.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'loans/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - Loan Management System{% endblock %}
+
+{% block page_heading %}{{ title }}{% endblock %}
+
+{% block page_actions %}
+    <a href="{% if customer %}{% url 'customer_detail' pk=customer.pk %}{% else %}{% url 'customer_list' %}{% endif %}" class="btn btn-sm btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
+{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">{{ title }}</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <h5>Personal Information</h5>
+                        <hr>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        {{ form.first_name|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.last_name|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.gender|as_crispy_field }}
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        {{ form.date_of_birth|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.phone_number|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.email|as_crispy_field }}
+                    </div>
+                    
+                    <div class="col-md-12 mb-3">
+                        <h5>Address Information</h5>
+                        <hr>
+                    </div>
+                    
+                    <div class="col-md-12 mb-3">
+                        {{ form.address|as_crispy_field }}
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        {{ form.city|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.state|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.pincode|as_crispy_field }}
+                    </div>
+                    
+                    <div class="col-md-12 mb-3">
+                        <h5>Identification</h5>
+                        <hr>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        {{ form.id_proof_type|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.id_proof_number|as_crispy_field }}
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        {{ form.id_proof_document|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.address_proof_document|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.photo|as_crispy_field }}
+                    </div>
+                    
+                    <div class="col-md-12 mb-3">
+                        <h5>Financial Information</h5>
+                        <hr>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        {{ form.occupation|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.income|as_crispy_field }}
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Save Customer
+                    </button>
+                    <a href="{% if customer %}{% url 'customer_detail' pk=customer.pk %}{% else %}{% url 'customer_list' %}{% endif %}" class="btn btn-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends 'loans/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}My Profile - Loan Management System{% endblock %}
+
+{% block page_heading %}My Profile{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-group">
+        <a href="{% url 'change_password' %}" class="btn btn-sm btn-outline-primary">
+            <i class="fas fa-key me-1"></i> Change Password
+        </a>
+        <a href="{% url 'dashboard' %}" class="btn btn-sm btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Profile Information</h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if profile.profile_picture %}
+                        <img src="{{ profile.profile_picture.url }}" alt="{{ user.get_full_name }}" class="rounded-circle img-thumbnail mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 150px; height: 150px;">
+                            <i class="fas fa-user fa-5x text-white"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <h4>{{ user.get_full_name }}</h4>
+                    <p class="text-muted mb-2">{{ user.email }}</p>
+                    <span class="badge bg-primary">{{ profile.get_role_display }}</span>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <div class="row">
+                            <div class="col-5 text-muted">Username</div>
+                            <div class="col-7">{{ user.username }}</div>
+                        </div>
+                    </li>
+                    <li class="list-group-item">
+                        <div class="row">
+                            <div class="col-5 text-muted">Phone</div>
+                            <div class="col-7">{{ profile.phone_number }}</div>
+                        </div>
+                    </li>
+                    {% if profile.date_of_birth %}
+                    <li class="list-group-item">
+                        <div class="row">
+                            <div class="col-5 text-muted">Date of Birth</div>
+                            <div class="col-7">{{ profile.date_of_birth|date:"d M Y" }}</div>
+                        </div>
+                    </li>
+                    {% endif %}
+                    {% if profile.address %}
+                    <li class="list-group-item">
+                        <div class="row">
+                            <div class="col-5 text-muted">Address</div>
+                            <div class="col-7">{{ profile.address }}</div>
+                        </div>
+                    </li>
+                    {% endif %}
+                    <li class="list-group-item">
+                        <div class="row">
+                            <div class="col-5 text-muted">Member Since</div>
+                            <div class="col-7">{{ user.date_joined|date:"d M Y" }}</div>
+                        </div>
+                    </li>
+                    <li class="list-group-item">
+                        <div class="row">
+                            <div class="col-5 text-muted">Last Login</div>
+                            <div class="col-7">{{ user.last_login|date:"d M Y, h:i A" }}</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Update Profile</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.first_name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.last_name|as_crispy_field }}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.email|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.phone_number|as_crispy_field }}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.date_of_birth|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.profile_picture|as_crispy_field }}
+                            </div>
+                            
+                            <div class="col-md-12 mb-3">
+                                {{ form.address|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Update Profile
+                            </button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

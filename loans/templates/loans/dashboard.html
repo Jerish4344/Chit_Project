@@ -1,0 +1,240 @@
+{% extends 'loans/base.html' %}
+
+{% block title %}Dashboard - Loan Management System{% endblock %}
+
+{% block page_heading %}Dashboard{% endblock %}
+
+{% block content %}
+    <!-- Stats Cards -->
+    <div class="row">
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-label">Active Loans</div>
+                        <div class="stat-value">{{ active_loans }}</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card bg-success text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-label">Completed Loans</div>
+                        <div class="stat-value">{{ completed_loans }}</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card bg-warning text-dark">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-label">Pending Loans</div>
+                        <div class="stat-value">{{ pending_loans }}</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card bg-info text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-label">Total Customers</div>
+                        <div class="stat-value">{{ total_customers }}</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Financial Summary -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Financial Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <h6 class="text-muted mb-1">Total Disbursed</h6>
+                                <h3 class="mb-0">₹{{ total_disbursed|floatformat:2 }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <h6 class="text-muted mb-1">Total Collected</h6>
+                                <h3 class="mb-0">₹{{ total_collected|floatformat:2 }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Recent Activities</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for activity in recent_activities %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">{{ activity.get_activity_type_display }}</h6>
+                                        <p class="text-muted mb-0 small">
+                                            <i class="fas fa-money-bill-wave me-1"></i> Loan #{{ activity.loan.loan_number }}
+                                            <span class="mx-1">|</span>
+                                            <i class="fas fa-user me-1"></i> {{ activity.loan.customer.full_name }}
+                                        </p>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="text-muted">{{ activity.performed_at|date:"d M Y, h:i A" }}</small>
+                                        {% if activity.performed_by %}
+                                            <p class="text-muted mb-0 small">by {{ activity.performed_by.get_full_name }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if activity.notes %}
+                                    <p class="mb-0 mt-1 small">{{ activity.notes }}</p>
+                                {% endif %}
+                            </div>
+                        {% empty %}
+                            <div class="list-group-item">
+                                <p class="mb-0 text-center text-muted">No recent activities</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Upcoming and Overdue Payments -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Upcoming Payments (Next 7 Days)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Due Date</th>
+                                    <th>Loan</th>
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in upcoming_payments %}
+                                    <tr>
+                                        <td>{{ payment.due_date|date:"d M Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'loan_detail' pk=payment.loan.pk %}">
+                                                #{{ payment.loan.loan_number }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'customer_detail' pk=payment.loan.customer.pk %}">
+                                                {{ payment.loan.customer.full_name }}
+                                            </a>
+                                        </td>
+                                        <td>₹{{ payment.amount|floatformat:2 }}</td>
+                                        <td>
+                                            <a href="{% url 'payment_update' pk=payment.pk %}" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-receipt me-1"></i> Record
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center">No upcoming payments for the next 7 days</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Overdue Payments</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Due Date</th>
+                                    <th>Loan</th>
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in overdue_payments %}
+                                    <tr class="table-danger">
+                                        <td>{{ payment.due_date|date:"d M Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'loan_detail' pk=payment.loan.pk %}">
+                                                #{{ payment.loan.loan_number }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'customer_detail' pk=payment.loan.customer.pk %}">
+                                                {{ payment.loan.customer.full_name }}
+                                            </a>
+                                        </td>
+                                        <td>₹{{ payment.amount|floatformat:2 }}</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{% url 'payment_update' pk=payment.pk %}" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-receipt me-1"></i> Record
+                                                </a>
+                                                <a href="{% url 'approve_late_payment' loan_pk=payment.loan.pk %}" class="btn btn-sm btn-warning">
+                                                    <i class="fas fa-clock me-1"></i> Approve Late
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center">No overdue payments</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

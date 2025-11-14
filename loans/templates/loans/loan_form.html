@@ -1,0 +1,85 @@
+{% extends 'loans/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create Loan Application - Loan Management System{% endblock %}
+
+{% block page_heading %}Create Loan Application{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'customer_detail' pk=customer.pk %}" class="btn btn-sm btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Customer
+    </a>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Customer Information -->
+            <div class="card mb-4">
+                <!-- Customer info card content -->
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <!-- Loan Application Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Loan Application Form</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Important:</strong> A loan requires 3 advance installments before disbursement and a total of 20 installments.
+                        <br>
+                        Interest rate: ₹500 per lakh per month.
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                Please correct the errors below.
+                            </div>
+                        {% endif %}
+                        
+                        {{ form|crispy }}
+
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Important:</strong> Each loan consists of 20 total installments:
+                            <ul class="mb-0 mt-2">
+                                <li>3 advance installments (required before loan disbursement)</li>
+                                <li>17 regular installments (after loan disbursement)</li>
+                            </ul>
+                            <div class="mt-2">Interest rate: ₹500 per lakh per month</div>
+                        </div>
+
+                        
+                        <div class="alert alert-warning mt-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Monthly Installment Calculation:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>For a loan of ₹1,00,000: ₹5,500 (₹5,000 principal + ₹500 interest)</li>
+                                <li>For a loan of ₹2,00,000: ₹11,000 (₹10,000 principal + ₹1,000 interest)</li>
+                                <li>For a loan of ₹3,00,000: ₹16,500 (₹15,000 principal + ₹1,500 interest)</li>
+                                <li>For a loan of ₹4,00,000: ₹22,000 (₹20,000 principal + ₹2,000 interest)</li>
+                                <li>For a loan of ₹5,00,000: ₹27,500 (₹25,000 principal + ₹2,500 interest)</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Create Loan Application
+                            </button>
+                            <a href="{% url 'customer_detail' pk=customer.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
