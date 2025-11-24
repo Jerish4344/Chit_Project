@@ -37,6 +37,49 @@
             min-height: calc(100vh - 56px);
             background-color: #343a40;
             color: white;
+            position: relative;
+        }
+        
+        /* Mobile sidebar toggle button */
+        .sidebar-toggle {
+            display: none;
+        }
+        
+        @media (max-width: 767px) {
+            .sidebar-toggle {
+                display: inline-block;
+            }
+            
+            .sidebar {
+                position: fixed;
+                top: 56px;
+                left: -100%;
+                width: 280px;
+                height: calc(100vh - 56px);
+                z-index: 1030;
+                transition: left 0.3s ease-in-out;
+                overflow-y: auto;
+            }
+            
+            .sidebar.show {
+                left: 0;
+                box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+            }
+            
+            .sidebar-overlay {
+                position: fixed;
+                top: 56px;
+                left: 0;
+                width: 100%;
+                height: calc(100vh - 56px);
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 1025;
+                display: none;
+            }
+            
+            .sidebar-overlay.show {
+                display: block;
+            }
         }
         
         .sidebar .nav-link {
@@ -207,54 +250,26 @@
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
+            {% if user.is_authenticated %}
+            <button class="navbar-toggler sidebar-toggle me-2" type="button" id="sidebarToggle" aria-label="Toggle sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            {% endif %}
             <a class="navbar-brand" href="{% url 'dashboard' %}">
                 <i class="fas fa-money-bill-wave me-2"></i>
                 Loan Management System
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-user me-1"></i>
-                                {{ user.get_full_name|default:user.username }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                <li><a class="dropdown-item" href="{% url 'profile' %}">
-                                    <i class="fas fa-id-card me-2"></i>Profile
-                                </a></li>
-                                <li><a class="dropdown-item" href="{% url 'activity_logs' %}">
-                                    <i class="fas fa-history me-2"></i>Activity Logs
-                                </a></li>
-                                <li><a class="dropdown-item" href="{% url 'change_password' %}">
-                                    <i class="fas fa-key me-2"></i>Change Password
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{% url 'logout' %}">
-                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
-                                </a></li>
-                            </ul>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">
-                                <i class="fas fa-sign-in-alt me-1"></i>Login
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
         </div>
     </nav>
     
     <div class="container-fluid">
         <div class="row">
             {% if user.is_authenticated %}
+                <!-- Sidebar Overlay for Mobile -->
+                <div class="sidebar-overlay" id="sidebarOverlay"></div>
+                
                 <!-- Sidebar -->
-                <div class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="col-md-3 col-lg-2 d-md-block sidebar" id="sidebar">
                     <div class="position-sticky pt-3">
                         <ul class="nav flex-column">
                             <li class="nav-item">
@@ -299,6 +314,42 @@
                                 <a class="nav-link" href="{% url 'customer_create' %}">
                                     <i class="fas fa-user-plus"></i>
                                     New Customer
+                                </a>
+                            </li>
+                        </ul>
+                        
+                        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                            <span>Account</span>
+                        </h6>
+                        <ul class="nav flex-column mb-2">
+                            <li class="nav-item">
+                                <div class="nav-link text-white-50 small">
+                                    <i class="fas fa-user"></i>
+                                    {{ user.get_full_name|default:user.username }}
+                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/profile/' in request.path %}active{% endif %}" href="{% url 'profile' %}">
+                                    <i class="fas fa-id-card"></i>
+                                    Profile
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/activity-logs/' in request.path %}active{% endif %}" href="{% url 'activity_logs' %}">
+                                    <i class="fas fa-history"></i>
+                                    Activity Logs
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/change-password/' in request.path %}active{% endif %}" href="{% url 'change_password' %}">
+                                    <i class="fas fa-key"></i>
+                                    Change Password
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'logout' %}">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    Logout
                                 </a>
                             </li>
                         </ul>
@@ -376,6 +427,38 @@
         var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
             return new bootstrap.Popover(popoverTriggerEl)
         })
+        
+        // Mobile sidebar toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            
+            if (sidebar && sidebarToggle && sidebarOverlay) {
+                // Toggle sidebar on button click
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('show');
+                    sidebarOverlay.classList.toggle('show');
+                });
+                
+                // Close sidebar when overlay is clicked
+                sidebarOverlay.addEventListener('click', function() {
+                    sidebar.classList.remove('show');
+                    sidebarOverlay.classList.remove('show');
+                });
+                
+                // Close sidebar when a nav link is clicked on mobile
+                const navLinks = sidebar.querySelectorAll('.nav-link');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        if (window.innerWidth < 768) {
+                            sidebar.classList.remove('show');
+                            sidebarOverlay.classList.remove('show');
+                        }
+                    });
+                });
+            }
+        });
     </script>
     
     {% block extra_js %}{% endblock %}
