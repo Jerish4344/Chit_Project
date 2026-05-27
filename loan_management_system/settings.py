@@ -85,11 +85,11 @@ WSGI_APPLICATION = 'loan_management_system.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'mysql.connector.django',
-        'NAME': 'chit_db',
-        'USER': 'root',
-        'PASSWORD': 'root@2001',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'NAME': 'db_name',
+        'USER': 'user_name',
+        'PASSWORD': 'user_pass',
+        'HOST': 'host',
+        'PORT': 'port',
     }
 }
 
